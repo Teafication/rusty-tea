@@ -1,0 +1,9 @@
+target/
+Cargo.lock
+.DS_Store
+.env
+*.swp
+*.swo
+*~
+.vscode/
+.idea/

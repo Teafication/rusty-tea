@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: rusty_tea_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rusty_tea_db}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rusty_tea_qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT_API_ENABLE_CONSOLE=true
+    healthcheck:
+      test: ["CMD", "sh", "-c", "test -f /proc/1/stat && echo healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: rusty_tea_api
+    ports:
+      - "${API_PORT:-3000}:3000"
+    env_file:
+      - ../.env
+    environment:
+      - RUST_LOG=${RUST_LOG:-info}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-app}@postgres:5432/${POSTGRES_DB:-rusty_tea_db}
+      - QDRANT_URL=http://qdrant:6333
+      - SERVER_HOST=0.0.0.0
+    volumes:
+      - vosk_models:/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  vosk_models:
+  postgres_data:
+  qdrant_storage:
