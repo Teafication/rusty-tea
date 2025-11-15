@@ -8,11 +8,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,13 +22,13 @@ services:
     image: qdrant/qdrant:latest
     container_name: rusty_tea_qdrant
     ports:
-      - "6333:6333"
+      - "6334:6333"
     volumes:
       - qdrant_storage:/qdrant/storage
     environment:
       - QDRANT_API_ENABLE_CONSOLE=true
     healthcheck:
-      test: ["CMD", "sh", "-c", "test -f /proc/1/stat && echo healthy"]
+      test: [ "CMD", "sh", "-c", "test -f /proc/1/stat && echo healthy" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -40,7 +40,7 @@ services:
       dockerfile: docker/Dockerfile
     container_name: rusty_tea_api
     ports:
-      - "${API_PORT:-3000}:3000"
+      - "${API_PORT:-8765}:3000"
     env_file:
       - ../.env
     environment:
