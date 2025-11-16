@@ -3,7 +3,7 @@
 ![Rust](https://img.shields.io/badge/rust-1.75%2B-orange?logo=rust)
 ![Status](https://img.shields.io/badge/status-Active-brightgreen)
 
-Voice chat AI assistant with speech-to-text (Vosk), LLM chat (OpenRouter), and text-to-speech (ElevenLabs). Ephemeral session-based conversations with PostgreSQL + Qdrant RAG.
+**Rust-powered voice chat backend** with local speech-to-text (Vosk), LLM chat (OpenRouter), and text-to-speech (ElevenLabs). Ephemeral sessions, no logs stored.
 
 **📖 Detailed docs:** See `DEVELOPMENT.md`
 
@@ -19,7 +19,7 @@ docker-compose -f docker/docker-compose.yml up -d
 cargo run
 ```
 
-Check: `curl http://localhost:3000/health`
+Check: `curl http://localhost:8765/health`
 
 ---
 
@@ -27,9 +27,9 @@ Check: `curl http://localhost:3000/health`
 
 | Service        | Port | Purpose                            |
 | -------------- | ---- | ---------------------------------- |
-| **API**        | 3000 | Transcription, chat, LLM           |
-| **PostgreSQL** | 5432 | Conversations, messages, documents |
-| **Qdrant**     | 6333 | Vector embeddings for RAG          |
+| **API**        | 8765 | Voice chat, transcription          |
+| **PostgreSQL** | 5433 | Conversations, messages (internal) |
+| **Qdrant**     | 6334 | Vector embeddings (internal)       |
 
 **Database:** Auto-migrations run on startup from `migrations/` folder.
 
@@ -41,10 +41,10 @@ All endpoints except `/health` and `/status` require Bearer token:
 
 ```bash
 curl -H "Authorization: Bearer your_token" \
-  http://localhost:3000/api/v1/transcriptions
+  http://localhost:8765/voice-chat
 ```
 
-Set `BEARER_TOKEN` in `.env` (dev) or `docker-compose.yml` (prod).
+Set `API_KEY` in `.env`.
 
 ---
 

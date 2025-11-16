@@ -15,11 +15,13 @@ cargo run
 
 ## 📦 Architecture
 
+**Stack:** Rust + Axum web framework
+
 **3 Services:**
 
-- **API** (Rust/Axum) port 3000 - Speech-to-text, voice chat, TTS
-- **PostgreSQL** port 5432 - Conversations, messages, documents, embeddings, api_usage
-- **Qdrant** port 6333 - Vector embeddings for RAG
+- **API** (Rust/Axum) port 8765 - Voice chat, transcription, TTS
+- **PostgreSQL** port 5433 - Conversations, messages (internal only)
+- **Qdrant** port 6334 - Vector embeddings (internal only)
 
 **AppState Services:**
 
@@ -53,21 +55,21 @@ api_usage: id, conversation_id, model, prompt_tokens, completion_tokens, cost, c
 
 ## 🔑 Environment Variables
 
-Set in `.env` (development) or docker-compose (production):
+Set in `.env`:
 
 ```bash
 # Auth
-BEARER_TOKEN=your_bearer_token_here
+API_KEY=your_api_key_here
 
 # Server
 SERVER_HOST=0.0.0.0
-SERVER_PORT=3000
+SERVER_PORT=3000  # Internal container port
 RUST_LOG=info
 
-# Database
+# Database (internal Docker network)
 DATABASE_URL=postgresql://app@postgres:5432/rusty_tea_db
 
-# Vector DB
+# Vector DB (internal)
 QDRANT_URL=http://qdrant:6333
 
 # LLM (OpenRouter)
@@ -77,8 +79,17 @@ OPENROUTER_CHAT_MODEL_LITE=meta-llama/llama-3.1-8b-instruct
 
 # TTS (ElevenLabs)
 ELEVENLABS_API_KEY=sk_your_key
-ELEVENLABS_VOICE_ID=EGNfK8LKuwEbqjx3yWz1  # Tea's voice
+ELEVENLABS_VOICE_ID=your_voice_id
+
+# Vosk Model
+VOSK_MODEL_PATH=/models/vosk-model-small-en-us-0.15
 ```
+
+**Ports (host → container):**
+
+- API: 8765 → 3000
+- PostgreSQL: 5433 → 5432 (internal only)
+- Qdrant: 6334 → 6333 (internal only)
 
 ## 🧪 Testing
 
@@ -103,7 +114,7 @@ All endpoints except `/health` and `/status` require Bearer token:
 
 ```bash
 curl -H "Authorization: Bearer your_token" \
-  http://localhost:3000/api/v1/transcriptions
+  http://localhost:8765/voice-chat
 ```
 
 ## 📡 Current Endpoints
@@ -132,8 +143,8 @@ docker-compose -f docker/docker-compose.yml up -d
 docker-compose -f docker/docker-compose.yml logs -f api
 
 # Health checks
-curl http://localhost:3000/health      # API
-curl http://localhost:6333/health      # Qdrant
+curl http://localhost:8765/health      # API
+curl http://localhost:6334/health      # Qdrant (internal)
 docker exec rusty_tea_postgres pg_isready -U postgres  # PostgreSQL
 
 # Stop
